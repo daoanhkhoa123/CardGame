@@ -1,7 +1,10 @@
 from dataclasses import dataclass, field
 from PIL import Image, ImageTk
 from random import choice
-from os import path, getcwd
+from os import path
+
+
+_ASSET_DIRECTORY = "Asset_cards"
 
 SUITS = ("spades", "clubs", "hearts", "diamonds")
 RANK = {
@@ -17,8 +20,12 @@ RANK = {
 class Card:
     rank: int  # 2 to 15, 15 is joker
     suit: str = field(compare=False)
+    folded: bool = field(compare=False, default=True, repr=False)
 
     def __repr__(self) -> str:
+        if self.folded:
+            return "O_0"
+
         if self.rank == 15:
             if self.suit == SUITS[3] or self.suit == SUITS[2]:
                 return "red_joker"
@@ -35,22 +42,24 @@ class Card:
         return img
 
     @property
-    def directory(self):
-        return path.join(getcwd(), "Asset_cards", f"{repr(self)}.png")
+    def directory(self) -> str:
+        if self.folded:
+            return path.join(_ASSET_DIRECTORY, "0_0.png")
+        return path.join(f"{repr(self)}.png")
 
 
 class Deck:
-    def __init__(self, joker=False) -> None:
+    def __init__(self, joker: bool = False) -> None:
         if not joker:
             self.__deck = _init_deck()
         else:
             self.__deck = _init_deck_joker()
 
     @property
-    def deck(self) -> list:
+    def deck(self) -> list[Card]:
         return self.__deck
 
-    def number_of_cards_left(self):
+    def number_of_cards_left(self) -> int:
         return len(self.__deck)
 
     def deal_card(self) -> Card:
@@ -68,7 +77,7 @@ class Deck:
 
 
 # initializing deck 54
-def _init_deck_joker():
+def _init_deck_joker() -> list[Card]:
     cards = [Card(None, None)] * 54
     count = 0
     for rank in range(2, 16):
@@ -86,7 +95,7 @@ def _init_deck_joker():
 
 
 # 52
-def _init_deck():
+def _init_deck() -> list[Card]:
     cards = [Card(None, None)] * 52
     count = 0
     for rank in range(2, 16):
@@ -102,3 +111,4 @@ def _init_deck():
 
 if __name__ == "__main__":
     ...
+    # print(path.dirname())
