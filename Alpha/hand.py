@@ -2,7 +2,22 @@ from tkinter import *
 
 
 class _HandHolder:
-    """Gimme a Frame and i will create the whole player from it
+    """ This is a class that is solely built for organizing card slot,
+    storing cards, and rendering them to show on the screen.
+
+    Imagine a  drawn frame of many slots where you put each card into those.
+    It is drawn on the table without the care for player.
+
+    Args:
+        master_frame (Frame): the frame that this stays inside
+        max_cards (int): the maximum amout of cards
+        rotation (int): 0, 90, 180, 270.
+
+    Atributes:
+        frame (Frame): The frame to hold the slots. MIGHT BE REMOVED
+        slot_list (list[Label]): list of card slots
+        card_list (list[Card]): list of cards
+        image_list (list[Image]): list of card images
     """
 
     def __init__(self, master_frame, max_cards, row=0, column=0, padx=0, pady=0, ipadx=0, ipady=0, borderwidth=0, vertical=False, name=str(), money=0) -> None:
