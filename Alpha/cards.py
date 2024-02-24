@@ -4,7 +4,9 @@ from random import choice
 from os import path
 
 
-_ASSET_DIRECTORY = "Asset_cards"
+_ASSET_DIRECTORY = path.join(path.dirname(
+    path.dirname(path.abspath(__file__))), "Asset_cards")
+
 
 SUITS = ("spades", "clubs", "hearts", "diamonds")
 RANK = {
@@ -21,6 +23,7 @@ class Card:
     rank: int  # 2 to 15, 15 is joker
     suit: str = field(compare=False)
     folded: bool = field(compare=False, default=True, repr=False)
+    rotation: int = field(compare=False,  default=0, repr=False)
 
     def __repr__(self) -> str:
         if self.folded:
@@ -38,14 +41,14 @@ class Card:
         img = Image.open(self.directory)
         img = img.resize((img.size[0] // inverse_ratio,
                           img.size[1]//inverse_ratio), Image.Resampling.LANCZOS)
+        img = img.rotate(self.rotation)
+
         img = ImageTk.PhotoImage(img)
         return img
 
     @property
     def directory(self) -> str:
-        if self.folded:
-            return path.join(_ASSET_DIRECTORY, "0_0.png")
-        return path.join(f"{repr(self)}.png")
+        return path.join(_ASSET_DIRECTORY, f"{self}.png")
 
 
 class Deck:
@@ -110,5 +113,4 @@ def _init_deck() -> list[Card]:
 
 
 if __name__ == "__main__":
-    ...
-    # print(path.dirname())
+    print(_ASSET_DIRECTORY)
