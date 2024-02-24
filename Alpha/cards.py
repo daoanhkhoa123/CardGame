@@ -23,6 +23,8 @@ class Card:
     rank: int  # 2 to 15, 15 is joker
     suit: str = field(compare=False)
     folded: bool = field(compare=False, default=True, repr=False)
+    __image: ImageTk.PhotoImage = field(
+        compare=False, default=None, repr=False)
 
     def __repr__(self) -> str:
         if self.folded:
@@ -43,7 +45,8 @@ class Card:
         img = img.rotate(rotation)
 
         img = ImageTk.PhotoImage(img)
-        return img
+        self.__image = img
+        return self.__image
 
     @property
     def directory(self) -> str:
@@ -73,10 +76,12 @@ class Deck:
         card = choice(self.deck)
         self.deck.remove(card)
         return card
-        
+
 
 """ ULTILITY FUNCTIONS """
 # initializing deck 54
+
+
 def _init_deck_joker() -> list[Card]:
     cards = [Card(None, None)] * 54
     count = 0
