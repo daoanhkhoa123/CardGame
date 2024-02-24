@@ -41,24 +41,28 @@ score_label = Label(my_frame, font=("Helvetica", 14), padx=10, pady=10,
 score_label.pack()
 
 
-def stand(hand: Hand):
-    hand.clear_hand()
+def clear_card(hand: Hand):
+    hand.clear_cards()
+
+
+def unfold(hand: Hand):
+    hand.unfold_cards()
 
 
 """ BUTTON """
 button_frame = Frame(root, bg="green")
 button_frame.pack(side=BOTTOM, pady=20)
 
-button_deal = Button(button_frame, text="Clear Hand",
-                     font=("Helvetica", 14), command=lambda: print("hello"))
+button_deal = Button(button_frame, text="Unfold cards",
+                     font=("Helvetica", 14), command=lambda: unfold(my_hand))
 button_deal.grid(row=0, column=0)
 
 card_button = Button(button_frame, text="Hit Card",
                      font=("Helvetica", 14), command=lambda: hit_me(my_hand))
 card_button.grid(row=0, column=1, padx=0)
 
-stand_button = Button(button_frame, text="Stand",
-                      font=("Helvetica", 14), command=stand(my_hand))
+stand_button = Button(button_frame, text="Clear cards",
+                      font=("Helvetica", 14), command=lambda: clear_card(my_hand))
 stand_button.grid(row=0, column=2)
 
 
