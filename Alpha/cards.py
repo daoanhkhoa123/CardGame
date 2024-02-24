@@ -23,11 +23,10 @@ class Card:
     rank: int  # 2 to 15, 15 is joker
     suit: str = field(compare=False)
     folded: bool = field(compare=False, default=True, repr=False)
-    rotation: int = field(compare=False,  default=0, repr=False)
 
     def __repr__(self) -> str:
         if self.folded:
-            return "O_0"
+            return "0_0"
 
         if self.rank == 15:
             if self.suit == SUITS[3] or self.suit == SUITS[2]:
@@ -37,11 +36,11 @@ class Card:
         return f"{RANK.get(self.rank, self.rank)}_of_{self.suit}"
 
     @property
-    def image(self, inverse_ratio: int = 3) -> ImageTk:
+    def image(self, inverse_ratio: int = 3, rotation: int = 0) -> ImageTk:
         img = Image.open(self.directory)
         img = img.resize((img.size[0] // inverse_ratio,
                           img.size[1]//inverse_ratio), Image.Resampling.LANCZOS)
-        img = img.rotate(self.rotation)
+        img = img.rotate(rotation)
 
         img = ImageTk.PhotoImage(img)
         return img
@@ -74,11 +73,9 @@ class Deck:
         card = choice(self.deck)
         self.deck.remove(card)
         return card
+        
 
-    def shuffle(self) -> Card:
-        return self.deal_card()
-
-
+""" ULTILITY FUNCTIONS """
 # initializing deck 54
 def _init_deck_joker() -> list[Card]:
     cards = [Card(None, None)] * 54
