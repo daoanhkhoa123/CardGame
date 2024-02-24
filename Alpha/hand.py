@@ -105,12 +105,13 @@ class _HandHolder:
         # impossible to change the count_card attribute
         # changing #update_image would be too complex
 
-        # since python garbage collector is shit, i have to do it manual
+        # since python garbage collector is shit, 
+        # the image does not go away, even when i deleted it.
 
         for i in range(self._count_card):
-            # self._label_list[i].config(image=None)
-            del (self._card_list[i])
-
+            self._label_list[i].config(image=None)
+            self._card_list[i] = None
+        
         self._count_card = 0
 
 
