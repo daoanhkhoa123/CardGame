@@ -24,11 +24,11 @@ class _HandHolder:
         image_list (list[Image]): list of card images
     """
 
-    def __init__(self, master_frame, max_cards, pad=0, borderwidth=0, vertical=False, rotation=0) -> None:
+    def __init__(self, master_frame, max_cards, width, height, pad=0, borderwidth=0, vertical=False, rotation=0) -> None:
         """HandHolder should stay inside a frame. 
         That frame represent the whole player
 
-        Handholder has a frame that contains labels, 
+        Handholder has a frame that contains labels, with its width and height
         each label shows a card. Number of labels is max_cards.
 
         Each label will be packed on grid either on x (horizontal),
@@ -42,7 +42,7 @@ class _HandHolder:
 
         """ Frame """
         self.__frame: LabelFrame = LabelFrame(
-            master_frame, bd=borderwidth)
+            master_frame, width=width, height=height, bd=borderwidth)
         self.__frame.pack()
 
         """ Card Label """
@@ -126,8 +126,9 @@ class _HandHolder:
 
 
 class Hand(_HandHolder):
-    def __init__(self, master_frame, max_cards, pad=0, borderwidth=0, vertical=False) -> None:
-        super().__init__(master_frame, max_cards, pad, borderwidth, vertical)
+    def __init__(self, master_frame, max_cards, width, height, pad=0, borderwidth=0, vertical=False, rotation=0) -> None:
+        super().__init__(master_frame, max_cards, width,
+                         height, pad, borderwidth, vertical, rotation)
 
         self.__score = 0
         self.__money = 0
