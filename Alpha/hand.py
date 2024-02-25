@@ -24,35 +24,43 @@ class _HandHolder:
         image_list (list[Image]): list of card images
     """
 
-    def __init__(self, master_frame, max_cards, row=0, column=0, padx=0, pady=0, ipadx=0, ipady=0, borderwidth=0, vertical=False, name=str(), money=0) -> None:
-        self.__frame: LabelFrame = LabelFrame(
-            master_frame, text=name, bd=borderwidth)
+    def __init__(self, master_frame, max_cards, pad=0, borderwidth=0, vertical=False, rotation=0) -> None:
+        """HandHolder should stay inside a frame. 
+        That frame represent the whole player
 
-        if not vertical:
-            self.__frame.pack(pady=pady, ipady=ipady)
-        else:
-            self.__frame.pack(padx=padx, ipadx=ipadx)
+        Handholder has a frame that contains labels, 
+        each label shows a card. Number of labels is max_cards.
+
+        Each label will be packed on grid either on x (horizontal),
+        or y (vertical), along with pad for spacing between cards.
+        The rotation (veriticality) is depend on rotation argument.
+        """
 
         # lists delcaration
         self._label_list: list[Label] = [None] * max_cards
         self._card_list: list[Card] = [None] * max_cards
 
-        # preparing slots
+        """ Frame """
+        self.__frame: LabelFrame = LabelFrame(
+            master_frame, bd=borderwidth)
+        self.__frame.pack()
+
+        """ Card Label """
         for i in range(max_cards):
             self._label_list[i] = Label(  # one label one card
                 self.__frame, text=str())
-
             if not vertical:
                 self._label_list[i].grid(
-                    row=row, column=i, pady=pady, padx=padx)
+                    row=0, column=i, pady=pad, padx=pad)
             else:
-                self._label_list[i].grid(column=column, row=i,
-                                         pady=pady, padx=padx)
+                self._label_list[i].grid(column=0, row=i,
+                                         pady=pad, padx=pad)
 
-        self._count_card = 0  # for convience in tracking card
+        # ultility
+        self.__count_card = 0  # for convience in tracking card
 
     def get_card(self):
-        for i in range(self._count_card):
+        for i in range(self.__count_card):
             yield self._card_list[i]
 
     def update_image(func) -> None:
@@ -69,7 +77,7 @@ class _HandHolder:
 
             """ render image """
             self: _HandHolder = args[0]
-            for i in range(self._count_card):
+            for i in range(self.__count_card):
                 self._label_list[i].config(image=self._card_list[i].image)
 
         return inner
@@ -85,40 +93,41 @@ class _HandHolder:
         Raises:
             IndexError: Maximum capacity reached
         """
-        if self._count_card + 1 > len(self._label_list):
+        if self.__count_card + 1 > len(self._label_list):
             raise IndexError(
                 "Invalid card: index out of range; Hand maximum capacity has reached.")
 
-        current_slot = self._count_card
-        self._count_card += 1
+        current_slot = self.__count_card
+        self.__count_card += 1
 
         # storing card and its image
         self._card_list[current_slot] = card
 
     @update_image
     def unfold_cards(self) -> None:
-        for i in range(self._count_card):
+        for i in range(self.__count_card):
             self._card_list[i].folded = False
 
+    # I can not use @update_image since it would be
+    # impossible to change the count_card attribute
+    # changing #update_image would be too complex
+
+    # since python garbage collector is shit, i have to do it manual
+
+    # this is bullshit, i can not clear the card, please help
     def clear_cards(self) -> None:
-        # I can not use @update_image since it would be
-        # impossible to change the count_card attribute
-        # changing #update_image would be too complex
 
-        # since python garbage collector is shit, 
-        # the image does not go away, even when i deleted it.
-
-        for i in range(self._count_card):
+        self._card_list.clear()
+        for i in range(self.__count_card):
             self._label_list[i].config(image=None)
-            self._card_list[i] = None
-        
-        self._count_card = 0
+            ...
+
+        self.__count_card = 0
 
 
 class Hand(_HandHolder):
-    def __init__(self, master_frame, max_cards, row=0, column=0, padx=0, pady=0, ipadx=0, ipady=0, borderwidth=0, vertical=False, name=str()) -> None:
-        super().__init__(master_frame, max_cards, row, column,
-                         padx, pady, ipadx, ipady, borderwidth, vertical, name)
+    def __init__(self, master_frame, max_cards, pad=0, borderwidth=0, vertical=False) -> None:
+        super().__init__(master_frame, max_cards, pad, borderwidth, vertical)
 
         self.__score = 0
         self.__money = 0
