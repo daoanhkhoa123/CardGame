@@ -1,3 +1,4 @@
+from Alpha.stack import StackLL
 from tkinter import *
 from os import path
 from random import choice
@@ -27,20 +28,25 @@ my_frame.pack(side="bottom")
 my_name = Label(my_frame, font=DEFAULT_FONT,
                 height=2, bg="green", text="Player")
 my_name.pack()
-my_hand = Hand(my_frame, 5, pad=2,
-               borderwidth=0)
+my_hand = Hand(my_frame, 13, pad=2, rotation=90)
 my_score = IntVar(my_frame)
 my_score_label = Label(my_frame, font=DEFAULT_FONT,
                        padx=10, pady=10, textvariable=my_score)
 
 deck = Deck(joker=True)
+a = StackLL()
+
+a = Hand()
 
 
 def hit_me(hand: Hand):
     global my_score
-    card = deck.deal_card()
-    hand.hit_card(card)
+    card = hand.hit_deck(deck)
     my_score.set(hand.score)
+    if card is not None:
+        a.push(card)
+        print(card)
+    print(len(a))
 
 
 score_label = Label(my_frame, font=DEFAULT_FONT, padx=10, pady=10,
