@@ -1,7 +1,8 @@
-from dataclasses import dataclass, field
 from PIL import Image, ImageTk
+from numpy import array
 from random import choice
 from os import path
+from dataclasses import dataclass, field
 
 
 _ASSET_DIRECTORY = path.join(path.dirname(
@@ -9,7 +10,7 @@ _ASSET_DIRECTORY = path.join(path.dirname(
 
 
 SUITS = ("spades", "clubs", "hearts", "diamonds")
-RANK = {
+RANK_TEXT = {
     11: "jack",
     12: "queen",
     13: "king",
@@ -24,21 +25,27 @@ class Card:
     suit: str = field(compare=False)
     folded: bool = field(compare=False, default=True, repr=False)
     __image: ImageTk.PhotoImage = field(
-        compare=False, default=None, repr=False)
+        compare=False, default=str(), repr=False)
 
     def __repr__(self) -> str:
-        if self.folded:
-            return "0_0"
-
-        if self.rank == 15:
+        if self.rank == 15:  # joker only has two suit
+            # anything red for easier customization
             if self.suit == SUITS[3] or self.suit == SUITS[2]:
                 return "red_joker"
             else:
                 return "black_joker"
-        return f"{RANK.get(self.rank, self.rank)}_of_{self.suit}"
+
+        return f"{RANK_TEXT.get(self.rank, self.rank)}_of_{self.suit}"
 
     @property
-    def image(self, inverse_ratio: int = 3, rotation: int = 0) -> ImageTk:
+    def directory(self) -> str:
+        file = repr(self)
+        if self.folded:
+            file = "0_0"
+
+        return path.join(_ASSET_DIRECTORY, f"{file}.png")
+
+    def image(self, inverse_ratio: int = 4, rotation: int = 0) -> ImageTk:
         img = Image.open(self.directory)
         img = img.resize((img.size[0] // inverse_ratio,
                           img.size[1]//inverse_ratio), Image.Resampling.LANCZOS)
@@ -48,24 +55,29 @@ class Card:
         self.__image = img
         return self.__image
 
-    @property
-    def directory(self) -> str:
-        return path.join(_ASSET_DIRECTORY, f"{self}.png")
-
 
 class Deck:
+    # i have to turn this into a list of number
+    # for optimization, otherwise it would case a
+    # lot of weird behaviour, and consume huge memory
+    # 52 cards, each contain images
+    # I will have to convert index to cards later
     def __init__(self, joker: bool = False) -> None:
         if not joker:
-            self.__deck = _init_deck()
+            self.__deck = [i for i in range(52)]
         else:
-            self.__deck = _init_deck_joker()
+            self.__deck = [i for i in range(54)]
 
     @property
     def deck(self) -> list[Card]:
         return self.__deck
 
+    @property
     def number_of_cards_left(self) -> int:
         return len(self.__deck)
+
+    def is_empty(self) -> bool:
+        return len(self.deck) == 0
 
     def deal_card(self) -> Card:
         """Get one random card from cards deck
@@ -73,45 +85,27 @@ class Deck:
         Args:
             cards_deck (list): list of card
         """
-        card = choice(self.deck)
-        self.deck.remove(card)
-        return card
+        if self.is_empty():
+            raise IndexError("Deck is aleady empty. Can not get any card.")
+
+        card_index = choice(self.deck)
+        self.deck.remove(card_index)
+        return index_to_card(card_index)
 
 
 """ ULTILITY FUNCTIONS """
-# initializing deck 54
 
 
-def _init_deck_joker() -> list[Card]:
-    cards = [Card(None, None)] * 54
-    count = 0
-    for rank in range(2, 16):
-        for suit in SUITS:
-            if rank == 15:
-                if suit == SUITS[0] or suit == SUITS[3]:  # Spades or Hearts
-                    cards[count] = Card(rank, suit)
-                else:
-                    continue
-
-            cards[count] = Card(rank, suit)
-            count += 1
-
-    return cards
-
-
-# 52
-def _init_deck() -> list[Card]:
-    cards = [Card(None, None)] * 52
-    count = 0
-    for rank in range(2, 16):
-        for suit in SUITS:
-            if rank == 15:
-                continue
-
-            cards[count] = Card(rank, suit)
-            count += 1
-
-    return cards
+def index_to_card(i: int) -> Card:
+    # maximum at 53
+    if i == 52:
+        return Card(15, SUITS[3])    # red joker
+    elif i == 53:
+        return Card(15, SUITS[0])     # black joker
+    else:  # 51 to 0, divide by 4 we have 0 to 12
+        rank = i//4 + 2  # i = 0 -> 2
+        suit = i % 4
+        return Card(rank, SUITS[suit])
 
 
 if __name__ == "__main__":
