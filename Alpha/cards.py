@@ -1,199 +1,112 @@
-from tkinter import *
+from PIL import Image, ImageTk
 from numpy import array
-from Alpha.cards import Card, Deck
+from random import choice
+from os import path
+from dataclasses import dataclass, field
 
 
-class _HandHolder:
-    """ This is a class that is solely built for organizing card slot,
-    storing cards, and rendering them to show on the screen.
-
-    Imagine a  drawn frame of many slots where you put each card into those.
-    It is drawn on the table without the care for player.
-    """
-
-    def __init__(self, master_frame, max_cards, pad=0, rotation=0) -> None:
-        """HandHolder should stay inside a frame. 
-        That frame represent the whole player
-
-        Handholder has a frame that contains labels, with its width and height
-        each label shows a card. Number of labels is max_cards.
-
-        Each label will be packed on grid either on x (horizontal),
-        or y (vertical), along with pad for spacing between cards.
-        The rotation (veriticality) is depend on rotation argument.
-
-        Args:
-            master_frame (Frame): the frame that this stays inside
-            max_cards (int): the maximum amout of cards
-            pad (int): padding between cards
-            rotation (int): 0, 90, 180, 270.
-
-        Atributes:
-            frame (Frame): The frame to hold the slots.
-            slot_list (list[Label]): list of card slots
-            card_list (list[Card]): list of cards
-            count_card (int): Tracking numbers of current card
-            rotation (int): Rotation
-        """
-
-        # lists delcaration
-        self._label_list: list[Label] = [None] * max_cards
-        self._card_list: list[Card] = [None] * max_cards
-
-        """ Frame """
-        self.__frame: LabelFrame = LabelFrame(master_frame)
-        self.__frame.pack()
-
-        """ Card Label """
-        for i in range(max_cards):
-            self._label_list[i] = Label(self.__frame, borderwidth=0)
-
-            if (rotation//2) % 2 == 0:  # 0 or 180
-                self._label_list[i].grid(
-                    row=0, column=i, pady=pad, padx=pad)
-            else:  # 90, 270 degree
-                self._label_list[i].grid(column=0, row=i,
-                                         pady=pad)
-
-        # ultility
-        self.__count_card: int = 0  # for convience in tracking card
-        self.__rotation: int = rotation
-
-    @property
-    def rotation(self) -> int:
-        return self.__rotation
-
-    @property
-    def max_card(self):
-        return len(self._card_list)
-
-    def is_full(self) -> bool:
-        return self.__count_card >= self.max_card  # because count card is index
-
-    def get_card(self):
-        for i in range(self.__count_card):
-            if self._card_list[i] is not None:
-                yield self._card_list[i]
-
-    def update_image(func) -> None:
-        """Update image decorator
-
-        This will update the image of the whole list.
-        Use with any function that would change the images.
-
-        Args:
-            func (function)
-        """
-        def inner(*args, **kwargs):
-            func(*args, **kwargs)
-
-            """ render image """
-            self: _HandHolder = args[0]
-            for i in range(self.__count_card):
-                self._label_list[i].config(
-                    image=self._card_list[i].image(inverse_ratio=6, rotation=self.rotation))
-
-        return inner
-
-    @update_image
-    def __hit_card(self, card: Card) -> None:
-        """Add one card into hand
-        NOTE: Default is cards are foleded
-
-        Args:
-            card (Card): card
-
-        Raises:
-            IndexError: Maximum capacity reached
-        """
-
-        if self.is_full():
-            raise IndexError(
-                "Invalid card: index out of range; Hand maximum capacity has reached.")
-
-        # storing card and its image
-        self._card_list[self.__count_card] = card
-        self.__count_card += 1
-
-    def hit_deck(self, deck: Deck) -> Card:
-        card = None
-        if not self.is_full() and not deck.is_empty():
-            card = deck.deal_card()
-            self.__hit_card(card)
-
-        return card
-
-    @update_image
-    def unfold_cards(self) -> None:
-        for i in range(self.__count_card):
-            self._card_list[i].folded = False
-
-    def clear_cards(self) -> None:
-        for i in range(self.max_card):
-            self._card_list[0] = None
-            self._label_list[i].config(image=str())
-
-        self.__count_card = 0
+_ASSET_DIRECTORY = path.join(path.dirname(
+    path.dirname(path.abspath(__file__))), "Asset_cards")
 
 
-class Hand(_HandHolder):
-    def __init__(self, master_frame, max_cards, pad=0, rotation=0) -> None:
-        super().__init__(master_frame, max_cards, pad, rotation)
+SUITS = ("spades", "clubs", "hearts", "diamonds")
+RANK_TEXT = {
+    11: "jack",
+    12: "queen",
+    13: "king",
+    14: "ace",
+    15: "joker"
+}
 
-        self.__score = 0
-        self.__money = 0
 
-    @property
-    def score(self) -> int:
-        """Calculate score from the every cars in hands
+@dataclass(order=True, eq=True)
+class Card:
+    rank: int  # 2 to 15, 15 is joker
+    suit: str = field(compare=False)
+    folded: bool = field(compare=False, default=True, repr=False)
+    __image: ImageTk.PhotoImage = field(
+        compare=False, default=str(), repr=False)
 
-        Returns:
-            int: score
-        """
-        self.__score = 0
-        joker_count = 0
-        ace_count = 0
-
-        # calculating the base points for all cards
-        for card in self.get_card():
-            if card.rank == 15:  # joker
-                joker_count += 1
-            elif card.rank == 14:  # ace
-                ace_count += 1
-
-            elif card.rank > 10:  # nobel card
-                self.__score += 10
+    def __repr__(self) -> str:
+        if self.rank == 15:  # joker only has two suit
+            # anything red for easier customization
+            if self.suit == SUITS[3] or self.suit == SUITS[2]:
+                return "red_joker"
             else:
-                self.__score += card.rank
+                return "black_joker"
 
-        # only ace and joker
-        for i in range(ace_count):
-            self.__score += 11
+        return f"{RANK_TEXT.get(self.rank, self.rank)}_of_{self.suit}"
 
-        for i in range(ace_count):
-            if self.__score > 21:
-                self.__score -= 10  # switch to 1
+    @property
+    def directory(self) -> str:
+        file = repr(self)
+        if self.folded:
+            file = "0_0"
 
-        remain_score = 21 - self.__score
-        if remain_score < joker_count:  # over 21
-            return -1
+        return path.join(_ASSET_DIRECTORY, f"{file}.png")
 
-        if remain_score < 11 * joker_count:  # lower  than 21 but still
-            return 21                       # can use joker to get 21
+    def image(self, inverse_ratio: int = 4, rotation: int = 0) -> ImageTk:
+        img = Image.open(self.directory)
+        img = img.resize((img.size[0] // inverse_ratio,
+                          img.size[1]//inverse_ratio), Image.Resampling.LANCZOS)
+        img = img.rotate(rotation)
 
-        self.__score += 11 * joker_count    # too low to get 21
+        img = ImageTk.PhotoImage(img)
+        self.__image = img
+        return self.__image
 
-        if self.__score > 21:
-            return -1
-        return self.__score
 
-    def __lt__(self, __value: object) -> bool:
-        return self.score > __value.score
+class Deck:
+    # i have to turn this into a list of number
+    # for optimization, otherwise it would case a
+    # lot of weird behaviour, and consume huge memory
+    # 52 cards, each contain images
+    # I will have to convert index to cards later
+    def __init__(self, joker: bool = False) -> None:
+        if not joker:
+            self.__deck = [i for i in range(52)]
+        else:
+            self.__deck = [i for i in range(54)]
 
-    def __eq__(self, __value: object) -> bool:
-        return self.score == __value.score
+    @property
+    def deck(self) -> list[Card]:
+        return self.__deck
+
+    @property
+    def number_of_cards_left(self) -> int:
+        return len(self.__deck)
+
+    def is_empty(self) -> bool:
+        return len(self.deck) == 0
+
+    def deal_card(self) -> Card:
+        """Get one random card from cards deck
+
+        Args:
+            cards_deck (list): list of card
+        """
+        if self.is_empty():
+            raise IndexError("Deck is aleady empty. Can not get any card.")
+
+        card_index = choice(self.deck)
+        self.deck.remove(card_index)
+        return index_to_card(card_index)
+
+
+""" ULTILITY FUNCTIONS """
+
+
+def index_to_card(i: int) -> Card:
+    # maximum at 53
+    if i == 52:
+        return Card(15, SUITS[3])    # red joker
+    elif i == 53:
+        return Card(15, SUITS[0])     # black joker
+    else:  # 51 to 0, divide by 4 we have 0 to 12
+        rank = i//4 + 2  # i = 0 -> 2
+        suit = i % 4
+        return Card(rank, SUITS[suit])
 
 
 if __name__ == "__main__":
-    ...
-    # from cards import Deck, Card
+    print(_ASSET_DIRECTORY)
