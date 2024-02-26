@@ -1,8 +1,9 @@
 from tkinter import *
+from numpy import array
 if __name__ != "__main__":
-    from Alpha.cards import Card
+    from Alpha.cards import Card, Deck
 else:
-    from cards import Card
+    from cards import Card, Deck
 
 
 class _HandHolder:
@@ -48,7 +49,7 @@ class _HandHolder:
         """ Card Label """
         for i in range(max_cards):
             self._label_list[i] = Label(  # one label one card
-                self.__frame, text=str())
+                self.__frame)
             if not vertical:
                 self._label_list[i].grid(
                     row=0, column=i, pady=pad, padx=pad)
@@ -59,9 +60,17 @@ class _HandHolder:
         # ultility
         self.__count_card = 0  # for convience in tracking card
 
+    @property
+    def max_card(self):
+        return len(self._card_list)
+
+    def is_full(self) -> bool:
+        return self.__count_card >= self.max_card  # because count card is index
+
     def get_card(self):
         for i in range(self.__count_card):
-            yield self._card_list[i]
+            if self._card_list[i] is not None:
+                yield self._card_list[i]
 
     def update_image(func) -> None:
         """Update image decorator
@@ -78,12 +87,13 @@ class _HandHolder:
             """ render image """
             self: _HandHolder = args[0]
             for i in range(self.__count_card):
-                self._label_list[i].config(image=self._card_list[i].image)
+                self._label_list[i].config(
+                    image=self._card_list[i].image(inverse_ratio=4, rotation=0))
 
         return inner
 
     @update_image
-    def hit_card(self, card: Card) -> None:
+    def __hit_card(self, card: Card) -> None:
         """Add one card into hand
         NOTE: Default is cards are foleded
 
@@ -93,34 +103,32 @@ class _HandHolder:
         Raises:
             IndexError: Maximum capacity reached
         """
-        if self.__count_card + 1 > len(self._label_list):
+
+        if self.is_full():
             raise IndexError(
                 "Invalid card: index out of range; Hand maximum capacity has reached.")
 
-        current_slot = self.__count_card
+        # storing card and its image
+        self._card_list[self.__count_card] = card
         self.__count_card += 1
 
-        # storing card and its image
-        self._card_list[current_slot] = card
+    def hit_deck(self, deck: Deck) -> Card:
+        card = None
+        if not self.is_full() and not deck.is_empty():
+            card = deck.deal_card()
+            self.__hit_card(card)
+
+        return card
 
     @update_image
     def unfold_cards(self) -> None:
         for i in range(self.__count_card):
             self._card_list[i].folded = False
 
-    # I can not use @update_image since it would be
-    # impossible to change the count_card attribute
-    # changing #update_image would be too complex
-
-    # since python garbage collector is shit, i have to do it manual
-
-    # this is bullshit, i can not clear the card, please help
     def clear_cards(self) -> None:
-
-        self._card_list.clear()
-        for i in range(self.__count_card):
-            self._label_list[i].config(image=None)
-            ...
+        for i in range(self.max_card):
+            self._card_list[0] = None
+            self._label_list[i].config(image=str())
 
         self.__count_card = 0
 
