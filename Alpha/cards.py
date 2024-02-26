@@ -57,11 +57,12 @@ class Card:
 
 
 class Deck:
-    # i have to turn this into a list of number
-    # for optimization, otherwise it would case a
-    # lot of weird behaviour, and consume huge memory
-    # 52 cards, each contain images
-    # I will have to convert index to cards later
+    # i have to turn this into a list of number for optimization,
+    # otherwise it would and consume huge memory since 
+    # a dech would have 52 cards, each contain images
+    # thus cause a lot of weird behaviour,
+    # Instead, i just  need to store a list of int and 
+    # convert it to card when dealing
     def __init__(self, joker: bool = False) -> None:
         if not joker:
             self.__deck = [i for i in range(52)]
