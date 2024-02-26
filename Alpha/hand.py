@@ -11,7 +11,7 @@ class _HandHolder:
     It is drawn on the table without the care for player.
     """
 
-    def __init__(self, master_frame, max_cards, pad=0, rotation=0) -> None:
+    def __init__(self, master_frame, max_cards, pad=0, rotation=0, imagescale=4) -> None:
         """HandHolder should stay inside a frame. 
         That frame represent the whole player
 
@@ -34,6 +34,7 @@ class _HandHolder:
             card_list (list[Card]): list of cards
             count_card (int): Tracking numbers of current card
             rotation (int): Rotation
+            imagescale (int): Scale of image
         """
 
         # lists delcaration
@@ -58,10 +59,15 @@ class _HandHolder:
         # ultility
         self.__count_card: int = 0  # for convience in tracking card
         self.__rotation: int = rotation
+        self.__scale: int = imagescale
 
     @property
     def rotation(self) -> int:
         return self.__rotation
+
+    @property
+    def scale(self) -> int:
+        return self.__scale
 
     @property
     def max_card(self):
@@ -91,7 +97,7 @@ class _HandHolder:
             self: _HandHolder = args[0]
             for i in range(self.__count_card):
                 self._label_list[i].config(
-                    image=self._card_list[i].image(inverse_ratio=6, rotation=self.rotation))
+                    image=self._card_list[i].image(inverse_ratio=self.scale, rotation=self.rotation))
 
         return inner
 
