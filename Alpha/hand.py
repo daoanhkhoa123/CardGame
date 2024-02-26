@@ -1,9 +1,6 @@
 from tkinter import *
 from numpy import array
-if __name__ != "__main__":
-    from Alpha.cards import Card, Deck
-else:
-    from cards import Card, Deck
+from Alpha.cards import Card, Deck
 
 
 class _HandHolder:
@@ -12,20 +9,9 @@ class _HandHolder:
 
     Imagine a  drawn frame of many slots where you put each card into those.
     It is drawn on the table without the care for player.
-
-    Args:
-        master_frame (Frame): the frame that this stays inside
-        max_cards (int): the maximum amout of cards
-        rotation (int): 0, 90, 180, 270.
-
-    Atributes:
-        frame (Frame): The frame to hold the slots. MIGHT BE REMOVED
-        slot_list (list[Label]): list of card slots
-        card_list (list[Card]): list of cards
-        image_list (list[Image]): list of card images
     """
 
-    def __init__(self, master_frame, max_cards, width, height, pad=0, borderwidth=0, vertical=False, rotation=0) -> None:
+    def __init__(self, master_frame, max_cards, pad=0, rotation=0) -> None:
         """HandHolder should stay inside a frame. 
         That frame represent the whole player
 
@@ -35,6 +21,19 @@ class _HandHolder:
         Each label will be packed on grid either on x (horizontal),
         or y (vertical), along with pad for spacing between cards.
         The rotation (veriticality) is depend on rotation argument.
+
+        Args:
+            master_frame (Frame): the frame that this stays inside
+            max_cards (int): the maximum amout of cards
+            pad (int): padding between cards
+            rotation (int): 0, 90, 180, 270.
+
+        Atributes:
+            frame (Frame): The frame to hold the slots.
+            slot_list (list[Label]): list of card slots
+            card_list (list[Card]): list of cards
+            count_card (int): Tracking numbers of current card
+            rotation (int): Rotation
         """
 
         # lists delcaration
@@ -42,23 +41,27 @@ class _HandHolder:
         self._card_list: list[Card] = [None] * max_cards
 
         """ Frame """
-        self.__frame: LabelFrame = LabelFrame(
-            master_frame, width=width, height=height, bd=borderwidth)
+        self.__frame: LabelFrame = LabelFrame(master_frame)
         self.__frame.pack()
 
         """ Card Label """
         for i in range(max_cards):
-            self._label_list[i] = Label(  # one label one card
-                self.__frame)
-            if not vertical:
+            self._label_list[i] = Label(self.__frame, borderwidth=0)
+
+            if (rotation//2) % 2 == 0:  # 0 or 180
                 self._label_list[i].grid(
                     row=0, column=i, pady=pad, padx=pad)
-            else:
+            else:  # 90, 270 degree
                 self._label_list[i].grid(column=0, row=i,
-                                         pady=pad, padx=pad)
+                                         pady=pad)
 
         # ultility
-        self.__count_card = 0  # for convience in tracking card
+        self.__count_card: int = 0  # for convience in tracking card
+        self.__rotation: int = rotation
+
+    @property
+    def rotation(self) -> int:
+        return self.__rotation
 
     @property
     def max_card(self):
@@ -88,7 +91,7 @@ class _HandHolder:
             self: _HandHolder = args[0]
             for i in range(self.__count_card):
                 self._label_list[i].config(
-                    image=self._card_list[i].image(inverse_ratio=4, rotation=0))
+                    image=self._card_list[i].image(inverse_ratio=6, rotation=self.rotation))
 
         return inner
 
@@ -134,9 +137,8 @@ class _HandHolder:
 
 
 class Hand(_HandHolder):
-    def __init__(self, master_frame, max_cards, width, height, pad=0, borderwidth=0, vertical=False, rotation=0) -> None:
-        super().__init__(master_frame, max_cards, width,
-                         height, pad, borderwidth, vertical, rotation)
+    def __init__(self, master_frame, max_cards, pad=0, rotation=0) -> None:
+        super().__init__(master_frame, max_cards, pad, rotation)
 
         self.__score = 0
         self.__money = 0
@@ -190,3 +192,8 @@ class Hand(_HandHolder):
 
     def __eq__(self, __value: object) -> bool:
         return self.score == __value.score
+
+
+if __name__ == "__main__":
+    ...
+    # from cards import Deck, Card
