@@ -27,7 +27,7 @@ class Card:
     __image: ImageTk.PhotoImage = field(
         compare=False, default=str(), repr=False)
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         if self.rank == 15:  # joker only has two suit
             # anything red for easier customization
             if self.suit == SUITS[3] or self.suit == SUITS[2]:
@@ -39,7 +39,7 @@ class Card:
 
     @property
     def directory(self) -> str:
-        file = repr(self)
+        file = str(self)
         if self.folded:
             file = "0_0"
 
