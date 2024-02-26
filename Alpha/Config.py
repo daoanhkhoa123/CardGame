@@ -1,5 +1,5 @@
 """ BOARD  """
-FONT = ("Helvetica", 14)
+SMALL_FONT = ("Helvetica", 14)
 BACKGROUD_COLOR = "green"
 
 """ CARD """
