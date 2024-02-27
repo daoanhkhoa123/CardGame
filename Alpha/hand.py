@@ -1,4 +1,5 @@
 import Alpha.Config as config
+from tkinter import Frame
 from tkinter import *
 from numpy import array
 from Alpha.cards import Card, Deck
@@ -12,7 +13,7 @@ class __HandHolder:
     It is drawn on the table without the care for player.
     """
 
-    def __init__(self, name, master_frame, max_cards, rotation=0) -> None:
+    def __init__(self, name: str, master_frame: Frame, max_cards: int) -> None:
         """HandHolder should stay inside a frame. 
         That frame represent the whole player
 
@@ -27,15 +28,14 @@ class __HandHolder:
             name (str): Name of this Hand
             master_frame (Frame): the frame that this stays inside
             max_cards (int): the maximum amout of cards
-            rotation (int): 0, 90, 180, 270.
 
         Atributes:
+            name (str): Name
             frame (Frame): The frame to hold the slots.
             slot_list (list[Label]): list of card slots
             card_list (list[Card]): list of cards
             count_card (int): Tracking numbers of current card
-            rotation (int): Rotation
-            name (str)
+
 
         """
 
@@ -45,29 +45,18 @@ class __HandHolder:
 
         """ Frame """
         self.__frame: LabelFrame = LabelFrame(
-            master_frame, labelanchor="n", text=name, font=config.FONT, height=config.CARD_HEIGHT)
+            master_frame, labelanchor="n", text=name, font=config.FONT)
         self.__frame.pack()
 
         """ Card Label """
         for i in range(max_cards):
             self._label_list[i] = Label(
-                self.__frame, borderwidth=0)
-
-            if (rotation//2) % 2 == 0:  # 0 or 180
-                self._label_list[i].grid(
-                    row=0, column=i, padx=config.PAD)
-            else:  # 90, 270 degree
-                self._label_list[i].grid(column=0, row=i,
-                                         pady=config.PAD)
+                self.__frame, image=str())
+            self._label_list[i].grid(row=0, column=i, padx=config.PAD)
 
         # ultility
         self.__count_card: int = 0  # for convience in tracking card
-        self.__rotation: int = rotation
         self.name = name
-
-    @property
-    def rotation(self) -> int:
-        return self.__rotation
 
     @property
     def max_card(self):
@@ -97,7 +86,7 @@ class __HandHolder:
             self: __HandHolder = args[0]
             for i in range(self.__count_card):
                 self._label_list[i].config(
-                    image=self._card_list[i].image(inverse_ratio=config.CARD_SCALE, rotation=self.rotation))
+                    image=self._card_list[i].image(inverse_ratio=config.CARD_SCALE))
 
         return inner
 
@@ -143,8 +132,8 @@ class __HandHolder:
 
 
 class Hand(__HandHolder):
-    def __init__(self, name, master_frame, max_cards, rotation=0) -> None:
-        super().__init__(name, master_frame, max_cards, rotation)
+    def __init__(self, name: str, master_frame: Frame, max_cards: int) -> None:
+        super().__init__(name, master_frame, max_cards)
 
         self.__score = 0
         self.__money = 0
@@ -189,12 +178,16 @@ class Hand(__HandHolder):
 
         self.__score += 11 * joker_count    # too low to get 21
 
-        if self.__score > 21:
+        if self.__score > 21:  # over 21
             return -1
+
+        if self.is_full() and self.__score < 21:
+            return 22  # five cards and below 21 should be higher
+
         return self.__score
 
     def __lt__(self, __value: object) -> bool:
-        return self.score > __value.score
+        return self.score < __value.score
 
     def __eq__(self, __value: object) -> bool:
         return self.score == __value.score
