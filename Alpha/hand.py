@@ -13,7 +13,7 @@ class __HandHolder:
     It is drawn on the table without the care for player.
     """
 
-    def __init__(self, name: str, master_frame: Frame, max_cards: int) -> None:
+    def __init__(self, name: str, master_frame: Frame, max_cards: int, rotation: int = 0) -> None:
         """HandHolder should stay inside a frame. 
         That frame represent the whole player
 
@@ -35,7 +35,7 @@ class __HandHolder:
             slot_list (list[Label]): list of card slots
             card_list (list[Card]): list of cards
             count_card (int): Tracking numbers of current card
-
+            rotation (int, optional): 0, 90, 180. 270
 
         """
 
@@ -52,15 +52,24 @@ class __HandHolder:
         for i in range(max_cards):
             self._label_list[i] = Label(
                 self.__frame, image=str())
-            self._label_list[i].grid(row=0, column=i, padx=config.PAD)
+
+            if (rotation//90) % 2 == 0:  # 0 or 180
+                self._label_list[i].grid(row=0, column=i, padx=config.PAD)
+            else:
+                self._label_list[i].grid(row=i, column=0, pady=config.PAD)
 
         # ultility
         self.__count_card: int = 0  # for convience in tracking card
+        self.__rotation: int = rotation
         self.name = name
 
     @property
     def max_card(self):
         return len(self._card_list)
+
+    @property
+    def rotation(self):
+        return self.__rotation
 
     def is_full(self) -> bool:
         return self.__count_card >= self.max_card  # because count card is index
@@ -86,7 +95,7 @@ class __HandHolder:
             self: __HandHolder = args[0]
             for i in range(self.__count_card):
                 self._label_list[i].config(
-                    image=self._card_list[i].image(inverse_ratio=config.CARD_SCALE))
+                    image=self._card_list[i].image(inverse_ratio=config.CARD_SCALE, rotation=self.rotation))
 
         return inner
 
@@ -132,8 +141,8 @@ class __HandHolder:
 
 
 class Hand(__HandHolder):
-    def __init__(self, name: str, master_frame: Frame, max_cards: int) -> None:
-        super().__init__(name, master_frame, max_cards)
+    def __init__(self, name: str, master_frame: Frame, max_cards: int, rotation: int = 0) -> None:
+        super().__init__(name, master_frame, max_cards, rotation)
 
         self.__score = 0
         self.__money = 0
@@ -179,20 +188,43 @@ class Hand(__HandHolder):
         self.__score += 11 * joker_count    # too low to get 21
 
         if self.__score > 21:  # over 21
-            return -1
+            self.__score = 21 - self.__score
+            return self.__score
+
+        if self.__score < 16:  # lower than 16 is lower
+            self.__score = -16
+            return self.__score
 
         if self.is_full() and self.__score < 21:
-            return 22  # five cards and below 21 should be higher
+            self.__score = 22
+            return self.__score  # five cards and below 21 should be higher
 
         return self.__score
 
+    @property
+    def money(self) -> int:
+        return self.__money
+
+    @money.setter
+    def money(self, value: int) -> None:
+        if type(value) is not int:
+            raise ValueError("Money must be a int type")
+
+        if value < 0:
+            value = 0
+        self.__money = value
+
     def __lt__(self, __value: object) -> bool:
+        if type(__value) is not Hand:
+            raise TypeError("Invalid comparasion between two different object")
         return self.score < __value.score
 
     def __eq__(self, __value: object) -> bool:
+        if type(__value) is not Hand:
+            raise TypeError("Invalid comparasion between two different object")
         return self.score == __value.score
 
 
 if __name__ == "__main__":
-    ...
     # from cards import Deck, Card
+    ...
