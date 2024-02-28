@@ -8,7 +8,6 @@ from dataclasses import dataclass, field
 _ASSET_DIRECTORY = path.join(path.dirname(
     path.dirname(path.abspath(__file__))), "Asset_cards")
 
-
 SUITS = ("spades", "clubs", "hearts", "diamonds")
 RANK_TEXT = {
     11: "jack",
@@ -49,7 +48,7 @@ class Card:
         img = Image.open(self.directory)
         img = img.resize((img.size[0] // inverse_ratio,
                           img.size[1]//inverse_ratio), Image.Resampling.LANCZOS)
-        img = img.rotate(rotation)
+        img = img.rotate(rotation, expand=1)
 
         img = ImageTk.PhotoImage(img)
         self.__image = img
