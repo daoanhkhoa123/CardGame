@@ -5,8 +5,9 @@ from random import choice, randint
 from PIL import Image, ImageTk
 from Alpha.cards import Card, Deck
 from Alpha.hand import Hand
+from Alpha.hand import load_from_string
 from Alpha.Config import *
-
+PLAY_FEE = 100
 
 """ WINDOW INITIALIZE"""
 window = Tk()
@@ -21,7 +22,13 @@ deck = Deck()
 """ PLAYER FRAME"""
 my_frame = Frame(window, bg="green", padx=20, pady=20)
 my_frame.pack(side="bottom")
-my_hand = Hand("player", my_frame, 5, 0)
+name = "Phong"
+money = 200
+with open(path.join("saves", "Phong.txt"), "r") as file:
+    name, money = load_from_string(file.read())
+
+my_hand = Hand(name, my_frame, 5)
+my_hand.money = money
 my_score = StringVar(my_frame)
 my_score_label = Label(my_frame, font=DEFAULT_FONT,
                        padx=10, pady=10, textvariable=my_score)
@@ -30,7 +37,6 @@ my_money = IntVar(window)
 my_money_label = Label(window, font=BIG_FONT,
                        textvariable=my_money, background=BACKGROUD_COLOR)
 my_money_label.pack(side="left", pady=60, padx=30)
-my_hand.money = 500
 my_money.set(my_hand.money)
 
 
@@ -84,7 +90,13 @@ button_card.grid(row=0, column=0, padx=0)
 
 
 def game_start():
-    global player_list, deck, button_deal, button_card
+    global player_list, deck, button_deal, button_card, my_money_label
+    if player_list[0].money < PLAY_FEE:
+        messagebox.showinfo(
+            "Insufficient money.", f"You have {player_list[0].money} while play fee is {PLAY_FEE}")
+        return
+    player_list[0].money -= PLAY_FEE
+    my_money.set(player_list[0].money)
     deck = Deck()
 
     for hand in player_list:
@@ -102,12 +114,16 @@ def game_start():
 
 
 def game_restart_pop_up():
-    if messagebox.askyesno("Continue?", "Do you want to play a new game?"):
+    global my_hand
+    if messagebox.askyesno("Continue?", f"Do you want to play a new game?\n Play fee is {PLAY_FEE}\n Quiting will save your progress."):
         game_start()
+    else:
+        with open(path.join("saves", f"{my_hand.name}.txt"), "+w") as file:
+            file.write(repr(my_hand))
 
 
 def game_restart():
-    global player_list, deck, window, button_card, button_deal
+    global player_list, deck, window, button_card, button_deal,  my_money_label
 
     bot_hit()
 
@@ -118,6 +134,10 @@ def game_restart():
         hand.unfold_cards()
 
     winner = max((player_list))
+    if winner is player_list[0]:  # if player win:
+        player_list[0].money += int(PLAY_FEE * 2)
+        my_money.set(player_list[0].money)
+
     # GET WINNER AND POP UP HERE
     win_text = Label(window, background=BACKGROUD_COLOR, font=BIG_FONT,
                      text=f"{winner.name} won!")
@@ -130,7 +150,12 @@ def game_restart():
 def bot_hit():
     global dealer_hand, deck, window
     for i in range(5):
-        if randint(0, 2):
+        if dealer_hand.score < 16:
+            dealer_hand.hit_deck(deck)
+        elif dealer_hand.score >= 21:
+            break
+
+        elif randint(0, 2) and not dealer_hand.is_full():
             dealer_hand.hit_deck(deck)
 
 
