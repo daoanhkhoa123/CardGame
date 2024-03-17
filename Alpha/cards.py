@@ -1,91 +1,112 @@
-from tkinter import *
-from os import path
-from random import choice, randint
 from PIL import Image, ImageTk
-from Alpha.cards import Card, Deck
-from Alpha.hand import Hand
-from time import sleep
-
-DEFAULT_FONT = ("Helvetica", 14)
-DEFAULT_BACKGROUND = "green"
-
-""" WINDOW """
-window = Tk()
-window.title("My Card Game")
-# root.iconbitmap(os.path.join(os.path.dirname(__file__), "icon.ico"))
-window.geometry("1280x720")
-window.configure(background="green")
-
-""" BUTTOM FRAME """
-button_frame = Frame(window, bg="green")
-button_frame.pack(side="bottom", pady=20)
+from numpy import array
+from random import choice
+from os import path
+from dataclasses import dataclass, field
 
 
-""" DEALER AND PLAYER FRAME"""
-dealer_frame = Frame(window, bg="green", padx=0, pady=0)
-dealer_frame.pack(side="top", pady=20)
+_ASSET_DIRECTORY = path.join(path.dirname(
+    path.dirname(path.abspath(__file__))), "Asset_cards")
 
-dealer_hand = Hand("dealer", dealer_frame, 5)
-dealer_score = IntVar(dealer_frame)
-dealer_score_label = Label(dealer_frame, font=DEFAULT_FONT,
-                           padx=10, pady=10, textvariable=dealer_score)
-
-
-my_frame = Frame(window, bg="green", padx=0, pady=0)
-my_frame.pack(side="bottom")
-
-my_hand = Hand("player", my_frame, 5, 90)
-my_score = IntVar(my_frame)
-my_score_label = Label(my_frame, font=DEFAULT_FONT,
-                       padx=10, pady=10, textvariable=my_score)
-
-deck = Deck(joker=True)
+SUITS = ("spades", "clubs", "hearts", "diamonds")
+RANK_TEXT = {
+    11: "jack",
+    12: "queen",
+    13: "king",
+    14: "ace",
+    15: "joker"
+}
 
 
-for i in range(2):
-    dealer_hand.hit_deck(deck)
-    my_hand.hit_deck(deck)
+@dataclass(order=True, eq=True)
+class Card:
+    rank: int  # 2 to 15, 15 is joker
+    suit: str = field(compare=False)
+    folded: bool = field(compare=False, default=True, repr=False)
+    __image: ImageTk.PhotoImage = field(
+        compare=False, default=str(), repr=False)
 
-    my_hand.unfold_cards()
+    def __str__(self) -> str:
+        if self.rank == 15:  # joker only has two suit
+            # anything red for easier customization
+            if self.suit == SUITS[3] or self.suit == SUITS[2]:
+                return "red_joker"
+            else:
+                return "black_joker"
 
+        return f"{RANK_TEXT.get(self.rank, self.rank)}_of_{self.suit}"
 
-def hit_me(hand: Hand):
-    global my_hand, dealer_hand
-    global deck
+    @property
+    def directory(self) -> str:
+        file = str(self)
+        if self.folded:
+            file = "0_0"
 
-    my_hand.hit_deck(deck)
+        return path.join(_ASSET_DIRECTORY, f"{file}.png")
 
+    def image(self, inverse_ratio: int = 4, rotation: int = 0) -> ImageTk:
+        img = Image.open(self.directory)
+        img = img.resize((img.size[0] // inverse_ratio,
+                          img.size[1]//inverse_ratio), Image.Resampling.LANCZOS)
+        # because we read from left to right
+        img = img.rotate(-rotation, expand=1)
 
-score_label = Label(my_frame, font=DEFAULT_FONT, padx=10, pady=10,
-                    bg="green", textvariable=my_score, text=str())
-score_label.pack()
-
-
-def clear_card(hand: Hand):
-    global my_hand, dealer_hand
-    global deck
-    deck = Deck(joker=False)
-
-
-def unfold(hand: Hand = None):
-    global my_hand, dealer_hand
-    my_hand.unfold_cards()
-    dealer_hand.unfold_cards()
-
-
-""" BUTTON """
-
-button_deal = Button(button_frame, text="Unfold cards",
-                     font=DEFAULT_FONT, command=lambda: unfold(my_hand))
-button_deal.grid(row=0, column=0)
-
-card_button = Button(button_frame, text="Hit Card",
-                     font=DEFAULT_FONT, command=lambda: hit_me(my_hand))
-card_button.grid(row=0, column=1, padx=0)
-
-stand_button = Button(button_frame, text="Stand",
-                      font=DEFAULT_FONT, command=lambda: clear_card(my_hand))
-stand_button.grid(row=0, column=2)
+        img = ImageTk.PhotoImage(img)
+        self.__image = img
+        return self.__image
 
 
-window.mainloop()
+class Deck:
+    # i have to turn this into a list of number
+    # for optimization, otherwise it would case a
+    # lot of weird behaviour, and consume huge memory
+    # 52 cards, each contain images
+    # I will have to convert index to cards later
+    def __init__(self, joker: bool = False) -> None:
+        if not joker:
+            self.__deck = [i for i in range(52)]
+        else:
+            self.__deck = [i for i in range(54)]
+
+    @property
+    def deck(self) -> list[Card]:
+        return self.__deck
+
+    @property
+    def number_of_cards_left(self) -> int:
+        return len(self.__deck)
+
+    def is_empty(self) -> bool:
+        return len(self.deck) == 0
+
+    def deal_card(self) -> Card:
+        """Get one random card from cards deck
+
+        Args:
+            cards_deck (list): list of card
+        """
+        if self.is_empty():
+            raise IndexError("Deck is aleady empty. Can not get any card.")
+
+        card_index = choice(self.deck)
+        self.deck.remove(card_index)
+        return index_to_card(card_index)
+
+
+""" ULTILITY FUNCTIONS """
+
+
+def index_to_card(i: int) -> Card:
+    # maximum at 53
+    if i == 52:
+        return Card(15, SUITS[3])    # red joker
+    elif i == 53:
+        return Card(15, SUITS[0])     # black joker
+    else:  # 51 to 0, divide by 4 we have 0 to 12
+        rank = i//4 + 2  # i = 0 -> 2
+        suit = i % 4
+        return Card(rank, SUITS[suit])
+
+
+if __name__ == "__main__":
+    print(_ASSET_DIRECTORY)
