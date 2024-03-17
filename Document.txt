@@ -1,0 +1,17 @@
+Alpha:  Config.py;  cards.py;  hand.py;  stack.py
+  Conatining modules for gameplay
+
+Asset_cards: *.png
+  Containing texture for cards
+
+Beta:
+  Conatining logic not related to gameplay.
+
+GUI:
+  Conatining gui logic
+
+Saves:
+  Containing player's saves
+
+Main: run.py
+  
