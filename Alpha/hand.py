@@ -37,6 +37,12 @@ class __HandHolder:
             count_card (int): Tracking numbers of current card
             rotation (int, optional): 0, 90, 180. 270
 
+        API:
+            get_card(self): yield cards in hand
+            update_image(func): update image decorator 
+            hit_deck(self, deck): get a card from deck
+            unfold_cards(self)
+            clear_cards(self): clear all card in hand
         """
 
         # lists delcaration
@@ -45,7 +51,7 @@ class __HandHolder:
 
         """ Frame """
         self.__frame: LabelFrame = LabelFrame(
-            master_frame, labelanchor="n", text=name, font=config.FONT)
+            master_frame, labelanchor="n", text=name, font=config.DEFAULT_FONT)
         self.__frame.pack()
 
         """ Card Label """
@@ -144,7 +150,6 @@ class Hand(__HandHolder):
     def __init__(self, name: str, master_frame: Frame, max_cards: int, rotation: int = 0) -> None:
         super().__init__(name, master_frame, max_cards, rotation)
 
-        self.__score = 0
         self.__money = 0
 
     @property
@@ -212,6 +217,7 @@ class Hand(__HandHolder):
 
         if value < 0:
             value = 0
+            raise ValueError("Money can not be negative")
         self.__money = value
 
     def __lt__(self, __value: object) -> bool:
@@ -223,6 +229,9 @@ class Hand(__HandHolder):
         if type(__value) is not Hand:
             raise TypeError("Invalid comparasion between two different object")
         return self.score == __value.score
+
+    def __repr__(self) -> str:
+        return f"@name {self.name} @money{self.money}"
 
 
 if __name__ == "__main__":
