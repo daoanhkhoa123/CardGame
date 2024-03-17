@@ -1,5 +1,6 @@
 """ BOARD  """
-SMALL_FONT = ("Helvetica", 14)
+DEFAULT_FONT = ("Helvetica", 14)
+BIG_FONT = ("Helvetica", 32)
 BACKGROUD_COLOR = "green"
 
 """ CARD """
@@ -13,4 +14,3 @@ CARD_HEIGHT = CARD_HEIGHT_ORIGINAL // CARD_SCALE
 """ HAND """
 MAX_CARD = 5
 PAD = 20
-BACKGROUD_COLOR = ""
