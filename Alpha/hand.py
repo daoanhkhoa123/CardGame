@@ -231,7 +231,20 @@ class Hand(__HandHolder):
         return self.score == __value.score
 
     def __repr__(self) -> str:
-        return f"@name {self.name} @money{self.money}"
+        return f"@{self.name} @{self.money}"
+
+
+def load_from_string(data: str) -> tuple[str, int]:
+    """Load name and money for Hand from string
+
+    Args:
+        data (str): repr of Hand
+
+    Returns:
+        tuple[str, int]: name and money
+    """
+    data = data[1:].split("@")
+    return data[0], int(data[1])
 
 
 if __name__ == "__main__":
