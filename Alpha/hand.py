@@ -150,7 +150,8 @@ class Hand(__HandHolder):
     def __init__(self, name: str, master_frame: Frame, max_cards: int, rotation: int = 0) -> None:
         super().__init__(name, master_frame, max_cards, rotation)
 
-        self.__money = 0
+        self.__money = 500
+        self.maxMoney = self.__money
 
     @property
     def score(self) -> int:
@@ -165,9 +166,7 @@ class Hand(__HandHolder):
 
         # calculating the base points for all cards
         for card in self.get_card():
-            if card.rank == 15:  # joker
-                joker_count += 1
-            elif card.rank == 14:  # ace
+            if card.rank == 14:  # ace
                 ace_count += 1
 
             elif card.rank > 10:  # nobel card
@@ -183,25 +182,8 @@ class Hand(__HandHolder):
             if self.__score > 21:
                 self.__score -= 10  # switch to 1
 
-        remain_score = 21 - self.__score
-        if remain_score < joker_count:  # over 21
-            return -1
-
-        if remain_score < 11 * joker_count:  # lower  than 21 but still
-            return 21                       # can use joker to get 21
-
-        self.__score += 11 * joker_count    # too low to get 21
-
-        if self.__score > 21:  # over 21
-            self.__score = 21 - self.__score
-            return self.__score
-
-        if self.__score < 16:  # lower than 16 is lower
-            self.__score = -16
-            return self.__score
-
         if self.is_full() and self.__score < 21:
-            self.__score = 22
+            # self.__score = 22
             return self.__score  # five cards and below 21 should be higher
 
         return self.__score
