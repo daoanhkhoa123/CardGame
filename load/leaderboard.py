@@ -1,7 +1,8 @@
-# leaderboard.py
 import tkinter as tk
 from tkinter import ttk
 import os
+
+leaderboard_window_open = False  # Biến toàn cục để kiểm tra cửa sổ đã mở hay chưa
 
 class Leaderboard:
     def __init__(self, master):
@@ -12,7 +13,7 @@ class Leaderboard:
         self.tree.heading('Rank', text='Rank')
         self.tree.heading('Name', text='Player Name')
         self.tree.heading('Money', text='Money')
-        
+
         # Đặt chiều rộng cho các cột
         self.tree.column('Rank', anchor='center', width=50)
         self.tree.column('Name', anchor='center', width=150)
@@ -50,8 +51,18 @@ class Leaderboard:
             else:
                 self.tree.insert('', tk.END, values=(index, name, money), tags=('oddrow',))
 
-# Hàm để khởi động leaderboard
 def show_leaderboard():
-    root = tk.Tk()
-    app = Leaderboard(root)
-    root.mainloop()
+    global leaderboard_window_open
+    if not leaderboard_window_open:
+        leaderboard_window_open = True
+        root = tk.Tk()
+        app = Leaderboard(root)
+        # Đặt xử lý khi cửa sổ đóng để reset trạng thái biến
+        root.protocol("WM_DELETE_WINDOW", lambda: on_leaderboard_window_close(root))
+        root.mainloop()
+
+def on_leaderboard_window_close(window):
+    global leaderboard_window_open
+    leaderboard_window_open = False
+    window.destroy()
+

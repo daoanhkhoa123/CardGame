@@ -1,6 +1,7 @@
-from RPS.RPS_GUI import *
+
 from load.load import load_player
 from load.leaderboard import show_leaderboard
+from Aboutus.aboutus import about_us
 import tkinter as tk
 from PIL import Image, ImageTk
 from tkinter import Button  # Assuming macOS, if not, you can use tk.Button
@@ -59,6 +60,11 @@ def load_home():
     # Exit Button
     exit_button = Button(frame, text="Exit", fg='white', bg='blue', command=root.quit)
     exit_button.place(relx=.8, rely=button_start_y + 4*button_gap, width=button_width, height=button_height)
+    
+    # About Us Button
+    about_us_button = Button(frame, text="About Us", fg='white', bg='blue', command=lambda: about_us(root))
+    about_us_button.place(relx=.8, rely=button_start_y + 5*button_gap, width=button_width, height=button_height)
+
 
 
 def playgame(frame):
@@ -67,8 +73,7 @@ def playgame(frame):
 def tutorial(frame):
     pass
 
-def leaderboard():
-    show_leaderboard()
+
 
 
 if __name__ == '__main__':
